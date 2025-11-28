@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aplikasi Ujian 50 Soal + Timer + Random</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f3f4f6; margin:0; }
+    .container { max-width:900px; margin:24px auto; background:white; padding:24px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+    button { padding:10px 16px; border:none; border-radius:8px; cursor:pointer; }
+    .btn-primary { background:#2563eb; color:white; }
+    .btn-secondary { background:#e5e7eb; }
+    .option { border:2px solid #e2e8f0; padding:12px; border-radius:10px; margin-bottom:10px; cursor:pointer; }
+    .option.selected { border-color:#2563eb; background:#2563eb15; }
+    .timer { font-size:16px; font-weight:700; color:#dc2626; margin-bottom:12px; }
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .meta { color:#475569; font-size:14px; }
+  </style>
+</head>
+<body>
+
+<div id="app" class="container"></div>
+
+<script>
+// ----------------------------------------------
+//  UTILITY: SHUFFLE
+// ----------------------------------------------
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// ----------------------------------------------
+//  BANK SOAL (50 soal: 30 PG biasa, 10 PG kompleks, 10 Benar/Salah)
+// ----------------------------------------------
+let questions = [
+  // 30 Pilihan Ganda Biasa
+  { type: 'mcq', id:1, question: 'Perangkat yang digunakan untuk memasukkan data ke komputer adalah?', options: ['Monitor','Keyboard','Speaker','Printer'], answer: 'Keyboard' },
+  { type: 'mcq', id:2, question: 'CPU merupakan singkatan dari?', options: ['Central Processing Unit','Control Program Utility','Central Printing Unit','Computer Power Unit'], answer: 'Central Processing Unit' },
+  { type: 'mcq', id:3, question: 'Sistem operasi berikut adalah?', options: ['Microsoft Word','Windows 10','Chrome','Photoshop'], answer: 'Windows 10' },
+  { type: 'mcq', id:4, question: 'Perangkat output adalah?', options: ['Mouse','Keyboard','Printer','Scanner'], answer: 'Printer' },
+  { type: 'mcq', id:5, question: 'RAM berfungsi untuk?', options: ['Menyimpan data sementara','Menyimpan data permanen','Menampilkan grafis','Menghubungkan jaringan'], answer: 'Menyimpan data sementara' },
+  { type: 'mcq', id:6, question: 'File berekstensi .docx dibuka dengan?', options: ['Excel','PowerPoint','Word','Notepad'], answer: 'Word' },
+  { type: 'mcq', id:7, question: 'Shortcut Copy adalah?', options: ['Ctrl + A','Ctrl + C','Ctrl + S','Ctrl + Z'], answer: 'Ctrl + C' },
+  { type: 'mcq', id:8, question: 'Hardware adalah?', options: ['Data','Perangkat keras','Perangkat lunak','Aplikasi'], answer: 'Perangkat keras' },
+  { type: 'mcq', id:9, question: 'Internet adalah?', options: ['Jaringan global','Perangkat input','Virus komputer','Sistem operasi'], answer: 'Jaringan global' },
+  { type: 'mcq', id:10, question: 'Contoh browser adalah?', options: ['Photoshop','Google Chrome','Excel','Word'], answer: 'Google Chrome' },
+  { type: 'mcq', id:11, question: 'ROM bersifat?', options: ['Dapat ditulis ulang','Tidak dapat diubah','Sementara','Volatile'], answer: 'Tidak dapat diubah' },
+  { type: 'mcq', id:12, question: 'Perangkat penyimpanan adalah?', options: ['Harddisk','Monitor','Keyboard','Mouse'], answer: 'Harddisk' },
+  { type: 'mcq', id:13, question: 'Port USB digunakan untuk?', options: ['Audio','Data transfer','Video','Mengatur BIOS'], answer: 'Data transfer' },
+  { type: 'mcq', id:14, question: 'Virus komputer adalah?', options: ['Hardware','Program berbahaya','Sistem operasi','File gambar'], answer: 'Program berbahaya' },
+  { type: 'mcq', id:15, question: 'Keyboard QWERTY dinamai dari?', options: ['Nama pencipta','Susunan huruf','Bahasa Arab','Nama perusahaan'], answer: 'Susunan huruf' },
+  { type: 'mcq', id:16, question: 'LAN adalah?', options: ['Jaringan lokal','Jaringan internasional','Modem','Printer'], answer: 'Jaringan lokal' },
+  { type: 'mcq', id:17, question: 'Proses booting adalah?', options: ['Mematikan PC','Menyalakan PC','Menghapus file','Menginstall aplikasi'], answer: 'Menyalakan PC' },
+  { type: 'mcq', id:18, question: 'Perangkat lunak adalah?', options: ['CPU','Windows','Mouse','Keyboard'], answer: 'Windows' },
+  { type: 'mcq', id:19, question: 'Microsoft Excel digunakan untuk?', options: ['Editing foto','Mengolah data angka','Browsing','Membuat video'], answer: 'Mengolah data angka' },
+  { type: 'mcq', id:20, question: 'Jenis file gambar adalah?', options: ['.mp3','.jpg','.exe','.docx'], answer: '.jpg' },
+  { type: 'mcq', id:21, question: 'SSD lebih cepat dibanding?', options: ['HDD','RAM','Keyboard','Monitor'], answer: 'HDD' },
+  { type: 'mcq', id:22, question: 'Fungsi mouse adalah?', options: ['Mengetik','Navigasi pointer','Menyimpan data','Menjalankan program'], answer: 'Navigasi pointer' },
+  { type: 'mcq', id:23, question: 'File .mp4 adalah?', options: ['Audio','Video','Gambar','Dokumen'], answer: 'Video' },
+  { type: 'mcq', id:24, question: 'Google Drive adalah?', options: ['Penyimpanan cloud','Hardware','Virus','Sistem operasi'], answer: 'Penyimpanan cloud' },
+  { type: 'mcq', id:25, question: 'PowerPoint digunakan untuk?', options: ['Presentasi','Hitung data','Menulis kode','Desain web'], answer: 'Presentasi' },
+  { type: 'mcq', id:26, question: 'RAM lebih ... dari harddisk.', options: ['Lambat','Cepat','Sama','Tidak ada'], answer: 'Cepat' },
+  { type: 'mcq', id:27, question: 'Keyboard termasuk perangkat?', options: ['Input','Output','Penyimpanan','Jaringan'], answer: 'Input' },
+  { type: 'mcq', id:28, question: 'Monitor menggunakan teknologi?', options: ['LED','USB','BIOS','RAM'], answer: 'LED' },
+  { type: 'mcq', id:29, question: 'Excel memiliki fitur?', options: ['Slide','Formula','Audio','Video'], answer: 'Formula' },
+  { type: 'mcq', id:30, question: 'Antivirus digunakan untuk?', options: ['Mempercepat internet','Melindungi komputer','Menghapus OS','Mencetak dokumen'], answer: 'Melindungi komputer' },
+
+  // 10 Pilihan Ganda Kompleks
+  { type: 'mcq', id:31, question: 'Pilih perangkat input berikut (yang sesuai sebagai input).', options: ['Mouse','Printer','Monitor','Speaker'], answer: 'Mouse' },
+  { type: 'mcq', id:32, question: 'Urutan boot yang benar adalah?', options: ['POST → Load OS','Load OS → POST','Login → POST','BIOS → Shutdown'], answer: 'POST → Load OS' },
+  { type: 'mcq', id:33, question: 'Penyimpanan tercepat di antara berikut adalah?', options: ['HDD','SSD','Disket','CD-ROM'], answer: 'SSD' },
+  { type: 'mcq', id:34, question: 'Aplikasi berikut untuk editing gambar adalah?', options: ['Word','Photoshop','Excel','Notepad'], answer: 'Photoshop' },
+  { type: 'mcq', id:35, question: 'Jaringan terbesar adalah?', options: ['LAN','MAN','WAN','PAN'], answer: 'WAN' },
+  { type: 'mcq', id:36, question: 'Chrome termasuk kategori?', options: ['Sistem operasi','Browser','Hardware','Text editor'], answer: 'Browser' },
+  { type: 'mcq', id:37, question: 'Memori permanen disebut?', options: ['RAM','ROM','Cache','Register'], answer: 'ROM' },
+  { type: 'mcq', id:38, question: 'Bluetooth berfungsi sebagai?', options: ['Jaringan kabel','Wireless','Aplikasi','Bahasa pemrograman'], answer: 'Wireless' },
+  { type: 'mcq', id:39, question: 'Shortcut paste yang benar adalah?', options: ['Ctrl+C','Ctrl+P','Ctrl+V','Alt+F4'], answer: 'Ctrl+V' },
+  { type: 'mcq', id:40, question: 'Untuk meeting online umumnya digunakan?', options: ['Zoom','Excel','Paint','CMD'], answer: 'Zoom' },
+
+  // 10 Benar/Salah
+  { type: 'truefalse', id:41, question: 'Monitor adalah perangkat output.', answer: 'Benar' },
+  { type: 'truefalse', id:42, question: 'Keyboard adalah perangkat output.', answer: 'Salah' },
+  { type: 'truefalse', id:43, question: 'RAM menyimpan data secara permanen.', answer: 'Salah' },
+  { type: 'truefalse', id:44, question: 'WiFi termasuk jaringan nirkabel.', answer: 'Benar' },
+  { type: 'truefalse', id:45, question: 'SSD lebih lambat dari HDD.', answer: 'Salah' },
+  { type: 'truefalse', id:46, question: 'PowerPoint digunakan untuk membuat presentasi.', answer: 'Benar' },
+  { type: 'truefalse', id:47, question: 'File .mp3 adalah file video.', answer: 'Salah' },
+  { type: 'truefalse', id:48, question: 'Excel digunakan untuk mengolah angka.', answer: 'Benar' },
+  { type: 'truefalse', id:49, question: 'USB adalah jenis penyimpanan internal.', answer: 'Salah' },
+  { type: 'truefalse', id:50, question: 'Mouse digunakan untuk navigasi pointer.', answer: 'Benar' }
+];
+
+// ----------------------------------------------
+//  ACak soal dan acak opsi dilakukan sebelum memulai ujian
+// ----------------------------------------------
+questions = shuffle(questions);
+// acak urutan opsi hanya untuk soal mcq
+questions.forEach(q => {
+  if (q.type === 'mcq' && Array.isArray(q.options)) {
+    q.options = shuffle(q.options.slice());
+  }
+});
+
+let currentIndex = 0;
+let answers = Array(questions.length).fill(null);
+let userName = "";
+let timeLeft = 3600; // 60 minutes
+let timerInterval;
+let warningPlayed = false;
+
+const alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
+const warningAudio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+
+// ----------------------------------------------
+// LOCK SCREEN (ANTI KELUAR TAB)
+// ----------------------------------------------
+let blurCount = 0;
+window.addEventListener('blur', () => {
+  blurCount++;
+  // hanya peringatan saat pertama kali keluar tab, untuk menghindari spam dialog
+  if (blurCount === 1) {
+    setTimeout(() => {
+      alert("⚠️ Anda tidak boleh meninggalkan layar ujian! Kembali ke tab ujian segera.");
+      window.focus();
+    }, 100);
+  } else {
+    // jika sering keluar, tampilkan peringatan singkat tanpa fokus paksa
+    console.warn('Peserta meninggalkan tab ujian beberapa kali.');
+  }
+});
+
+// ----------------------------------------------
+// LOGIN
+// ----------------------------------------------
+function renderLogin() {
+  document.getElementById("app").innerHTML = `
+    <header>
+      <div>
+        <h2 style="margin:0">Login Ujian</h2>
+        <div class="meta">Ujian: Aplikasi Komputer — 50 Soal</div>
+      </div>
+      <div class="meta">Durasi: 60 menit</div>
+    </header>
+
+    <div style="margin-top:12px">
+      <input id="nameInput" placeholder="Masukkan Nama" style="width:100%;padding:12px;border-radius:8px;border:1px solid #ccc" />
+      <br/><br/>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-primary" onclick="startExam()">Mulai Ujian</button>
+        <button class="btn-secondary" onclick="shuffleQuestionsPreview()">Acak Ulang Soal</button>
+      </div>
+    </div>
+  `;
+}
+
+function shuffleQuestionsPreview() {
+  // pengacak ulang soal sebelum mulai (opsional)
+  questions = shuffle(questions);
+  questions.forEach(q => { if (q.type === 'mcq' && Array.isArray(q.options)) q.options = shuffle(q.options.slice()); });
+  alert('Soal diacak ulang. Klik Mulai Ujian untuk memulai.');
+}
+
+// FULLSCREEN MODE
+function enterFullscreen() {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) elem.requestFullscreen();
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+}
+
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    alert('❌ Anda keluar dari fullscreen. Ujian otomatis dihentikan.');
+    finishExam();
+  }
+});
+
+function startExam() {
+  const val = document.getElementById("nameInput").value.trim();
+  if (!val) return alert("Nama wajib diisi!");
+  userName = val;
+  // reset pointer & jawaban setiap mulai
+  currentIndex = 0;
+  answers = Array(questions.length).fill(null);
+  // start timer
+  startTimer();
+  renderExam();
+}
+
+// ----------------------------------------------
+//  TIMER
+// ----------------------------------------------
+function startTimer() {
+  // clear previous jika ada
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+
+    if (timeLeft === 300 && !warningPlayed) {
+      warningPlayed = true;
+      warningAudio.play();
+      alert("⏳ 5 menit tersisa! Harap segera menyelesaikan ujian.");
+    }
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alarmAudio.play();
+      finishExam();
+    }
+
+    updateTimer();
+  }, 1000);
+  updateTimer();
+}
+
+function updateTimer() {
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const timerText = `Waktu Tersisa: ${minutes}:${String(seconds).padStart(2,'0')}`;
+  const timerEl = document.getElementById("timer");
+  if (timerEl) timerEl.textContent = timerText;
+}
+
+// ----------------------------------------------
+//  RENDER HALAMAN UJIAN
+// ----------------------------------------------
+function renderExam() {
+  // safety: jika tidak ada soal
+  if (!questions || questions.length === 0) {
+    document.getElementById("app").innerHTML = '<p>Tidak ada soal tersedia.</p>';
+    return;
+  }
+
+  const q = questions[currentIndex];
+  let optionHTML = "";
+
+  if (q.type === 'mcq') {
+    optionHTML = q.options.map(opt => `
+      <div class="option ${answers[currentIndex] === opt ? 'selected' : ''}" onclick="selectOption('${escapeHtml(opt)}')">${escapeHtml(opt)}</div>
+    `).join('');
+  } else if (q.type === 'truefalse') {
+    ['Benar','Salah'].forEach(opt => {
+      optionHTML += `<div class="option ${answers[currentIndex] === opt ? 'selected' : ''}" onclick="selectOption('${opt}')">${opt}</div>`;
+    });
+  } else {
+    optionHTML = '<div><em>Tipe soal tidak dikenali.</em></div>';
+  }
+
+  document.getElementById("app").innerHTML = `
+    <div id="timer" class="timer"></div>
+    <header style="margin-bottom:8px;">
+      <div><strong>Soal ${currentIndex + 1} / ${questions.length}</strong></div>
+      <div class="meta">Mahasiswa: <strong>${escapeHtml(userName)}</strong></div>
+    </header>
+
+    <div style="margin-bottom:12px"><p style="margin:0">${escapeHtml(q.question)}</p></div>
+
+    <div>
+      ${optionHTML}
+    </div>
+
+    <div style="margin-top:18px; display:flex; gap:10px;">
+      ${currentIndex > 0 ? `<button class="btn-secondary" onclick="back()">← Sebelumnya</button>` : ''}
+      ${currentIndex < questions.length - 1 ? `<button class="btn-primary" onclick="next()">Selanjutnya →</button>` : `<button class="btn-primary" onclick="finishExam()">Selesai</button>`}
+      <button class="btn-secondary" onclick="reviewAnswers()">Tinjau Jawaban</button>
+    </div>
+  `;
+
+  updateTimer();
+}
+
+// ----------------------------------------------
+//  HELPERS
+// ----------------------------------------------
+function escapeHtml(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function selectOption(choice) {
+  // reverse escape if needed
+  const unescaped = choice.replace(/&apos;/g, "'");
+  answers[currentIndex] = unescaped;
+  renderExam();
+}
+
+function next() { if (currentIndex < questions.length - 1) { currentIndex++; renderExam(); } }
+function back() { if (currentIndex > 0) { currentIndex--; renderExam(); } }
+
+// show quick review (which questions answered)
+function reviewAnswers() {
+  let list = '';
+  questions.forEach((q,i) => {
+    list += `${i+1}. ${answers[i] ? '✔️' : '❌'} `;
+  });
+  alert('Status Jawaban:\n' + list);
+}
+
+// ----------------------------------------------
+//  FINISH & SCORE
+// ----------------------------------------------
+function finishExam() {
+  if (timerInterval) clearInterval(timerInterval);
+
+  // calculate score
+  let score = 0;
+  questions.forEach((q,i) => {
+    const given = (answers[i] || '').toString().trim().toLowerCase();
+    const correct = (q.answer || '').toString().trim().toLowerCase();
+    if (given && given === correct) score++;
+  });
+
+  document.getElementById("app").innerHTML = `
+    <h2>Hasil Ujian</h2>
+    <p>Nama: <b>${escapeHtml(userName)}</b></p>
+    <p>Skor Anda: <b>${score}</b> dari ${questions.length}</p>
+    <p>Persentase: <b>${((score / questions.length) * 100).toFixed(1)}%</b></p>
+    <br/>
+    <button class="btn-primary" onclick="location.reload()">Ulangi Ujian</button>
+  `;
+}
+
+// ----------------------------------------------
+//  INIT
+// ----------------------------------------------
+renderLogin();
+</script>
+
+</body>
+</html>
